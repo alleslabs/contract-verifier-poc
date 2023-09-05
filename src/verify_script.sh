@@ -7,9 +7,9 @@ IS_ARM=$4
 COMMIT_HASH=$5
 
 DIR=$(uuidgen)
-[ ! -d "../contracts" ] && mkdir ../contracts
+[ ! -d "~/compiling-contracts" ] && mkdir ~/compiling-contracts
 
-cd ../contracts
+cd ~/compiling-contracts
 
 git clone $GIT_URL $DIR
 cd $DIR
