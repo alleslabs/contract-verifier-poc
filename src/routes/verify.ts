@@ -69,9 +69,11 @@ verifyRouter.get(
       const codeInfo = await getCodeIdInfo(chain, network, id);
 
       console.log("compiling contract...");
-      const { stdout } = await exec(
+      const { stdout, stderr } = await exec(
         `./src/verify_script.sh ${gitUrl} ${fileName} ${optimizer} ${isArm.toLowerCase()} ${commitHash}`
       );
+      if (stderr) console.log(stderr);
+
       const generatedHash = stdout.trim().split(/\s+/).pop() ?? "";
 
       console.log("complete");
