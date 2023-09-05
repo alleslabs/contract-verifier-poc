@@ -52,13 +52,29 @@ verifyRouter.get(
         .status(500)
         .send("Error missing optimizer version (e.g. optimizer=0.14.0)");
 
+    console.log(
+      "verify request:",
+      chain,
+      network,
+      id,
+      gitUrl,
+      fileName,
+      optimizer,
+      isArm,
+      commitHash
+    );
+
     try {
+      console.log("getting LCD...");
       const codeInfo = await getCodeIdInfo(chain, network, id);
 
+      console.log("compiling contract...");
       const { stdout } = await exec(
         `./src/verify_script.sh ${gitUrl} ${fileName} ${optimizer} ${isArm.toLowerCase()} ${commitHash}`
       );
       const generatedHash = stdout.trim().split(/\s+/).pop() ?? "";
+
+      console.log("complete");
       res.json({
         uploaded_hash: codeInfo.code_info.data_hash,
         compiled_hash: generatedHash.toUpperCase(),
@@ -68,6 +84,7 @@ verifyRouter.get(
       const status = e.response.status;
       const lcdError = e.response.data.message;
 
+      console.log("error -", status ?? 500, lcdError ?? e.message);
       res
         .status(status ?? 500)
         .send(lcdError ? `LCD Error - ${lcdError}` : e.message);
