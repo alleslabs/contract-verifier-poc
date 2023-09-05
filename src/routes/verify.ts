@@ -1,10 +1,7 @@
-import util from "util";
-import childProcess from "child_process";
 import express, { NextFunction, Request, Response, Router } from "express";
-import { getCodeIdInfo } from "./utils";
-import { AxiosError } from "axios";
+import { CompileParams, getCodeIdInfo, validateCompileParams } from "./utils";
+import { readCompiledHash } from "./utils/file";
 
-const exec = util.promisify(childProcess.exec);
 export const verifyRouter: Router = express.Router();
 
 interface VerifyParams {
@@ -13,83 +10,42 @@ interface VerifyParams {
   id: string;
 }
 
-interface VerifyQueryParams {
-  gitUrl?: string;
-  fileName?: string;
-  optimizer?: string;
-  isArm?: string;
-  commitHash?: string;
-}
-
 verifyRouter.get(
   "/:chain/:network/:id",
   async (
-    req: Request<VerifyParams, {}, {}, VerifyQueryParams>,
+    req: Request<VerifyParams, {}, {}, CompileParams>,
     res: Response,
     _next: NextFunction
   ) => {
     const { chain, network, id } = req.params;
-    const {
-      gitUrl,
-      fileName,
-      optimizer,
-      isArm = "false",
-      commitHash = "",
-    } = req.query;
+    let params: CompileParams;
+    try {
+      params = validateCompileParams(req.query);
+    } catch (err) {
+      return res.status(500).send(err.message);
+    }
 
-    if (gitUrl === undefined)
-      res
-        .status(500)
-        .send("Error missing git source url (e.g. gitUrl=https://...)");
-    if (fileName === undefined)
-      res
-        .status(500)
-        .send(
-          "Error missing file name to be verified (e.g. fileName=contract_name.wasm)"
-        );
-    if (optimizer === undefined)
-      res
-        .status(500)
-        .send("Error missing optimizer version (e.g. optimizer=0.14.0)");
-
-    console.log(
-      "verify request:",
-      chain,
-      network,
-      id,
-      gitUrl,
-      fileName,
-      optimizer,
-      isArm,
-      commitHash
-    );
-
+    console.log("GET Verify request:", params);
     try {
       console.log("getting LCD...");
       const codeInfo = await getCodeIdInfo(chain, network, id);
 
-      console.log("compiling contract...");
-      const { stdout, stderr } = await exec(
-        `./src/verify_script.sh ${gitUrl} ${fileName} ${optimizer} ${isArm.toLowerCase()} ${commitHash}`
-      );
-      if (stderr) console.log(stderr);
+      console.log("retrieving...");
+      const { hash, err } = readCompiledHash(params);
+      if (!hash) throw err;
 
-      const generatedHash = stdout.trim().split(/\s+/).pop() ?? "";
-
-      console.log("complete");
-      res.json({
+      return res.send({
         uploaded_hash: codeInfo.code_info.data_hash,
-        compiled_hash: generatedHash.toUpperCase(),
-        verified: codeInfo.code_info.data_hash === generatedHash.toUpperCase(),
+        compiled_hash: hash,
       });
-    } catch (e) {
-      const status = e.response.status;
-      const lcdError = e.response.data.message;
+    } catch (err) {
+      const status = err.response.status;
+      const lcdError = err.response.data.message;
 
-      console.log("error -", status ?? 500, lcdError ?? e.message);
-      res
+      console.log("error -", status ?? 500, lcdError ?? err.message);
+      return res
         .status(status ?? 500)
-        .send(lcdError ? `LCD Error - ${lcdError}` : e.message);
+        .send(lcdError ? `LCD Error - ${lcdError}` : err.message);
     }
   }
 );

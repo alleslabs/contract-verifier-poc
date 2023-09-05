@@ -1,10 +1,10 @@
 #!/bin/sh
 
 GIT_URL=$1
-FILE_NAME=$2
-OPTIMIZER=$3
-IS_ARM=$4
-COMMIT_HASH=$5
+COMMIT_HASH=$2
+FILE_NAME=$3
+OPTIMIZER=$4
+IS_ARM=$5
 
 DIR=$(uuidgen)
 [ ! -d "~/compiling-contracts" ] && mkdir ~/compiling-contracts
