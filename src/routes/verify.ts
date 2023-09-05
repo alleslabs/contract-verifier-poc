@@ -1,6 +1,11 @@
 import express, { NextFunction, Request, Response, Router } from "express";
-import { CompileParams, getCodeIdInfo, validateCompileParams } from "./utils";
-import { readCompiledHash } from "./utils/file";
+
+import {
+  CompileParams,
+  getCodeIdInfo,
+  readCompiledHash,
+  validateCompileParams,
+} from "./utils";
 
 export const verifyRouter: Router = express.Router();
 

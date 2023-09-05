@@ -1,6 +1,7 @@
 import fs from "fs";
-import { CompileParams } from "./compile";
 import { Hash, createHash } from "crypto";
+
+import { CompileParams } from "./compile";
 
 // Set up directory for compiled contract
 const COMPILED_HASH_DIR = "../compiled-hash";

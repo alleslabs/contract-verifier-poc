@@ -1,7 +1,12 @@
 import { exec } from "child_process";
 import express, { NextFunction, Request, Response, Router } from "express";
-import { CompileParams, validateCompileParams } from "./utils";
-import { readCompiledHash, writeCompiledHash } from "./utils/file";
+
+import {
+  CompileParams,
+  readCompiledHash,
+  validateCompileParams,
+  writeCompiledHash,
+} from "./utils";
 
 export const compileRouter: Router = express.Router();
 
